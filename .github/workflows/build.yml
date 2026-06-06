@@ -3,6 +3,7 @@ name: Build All Platforms
 on:
   push:
     branches: [main, master]
+    tags: ['v*']
   workflow_dispatch:
 
 jobs:
@@ -29,10 +30,11 @@ jobs:
           python-version: "3.11"
       - run: pip install pyinstaller
       - run: pyinstaller openclaw_installer.spec --clean --noconfirm
+      - run: cd dist && zip -r OpenClaw_Installer_macOS.zip OpenClaw_Installer.app
       - uses: actions/upload-artifact@v4
         with:
           name: OpenClaw_Installer_macOS
-          path: dist/OpenClaw_Installer.app
+          path: dist/OpenClaw_Installer_macOS.zip
 
   build-linux:
     runs-on: ubuntu-latest
@@ -50,3 +52,18 @@ jobs:
         with:
           name: OpenClaw_Installer_Linux
           path: dist/OpenClaw_Installer
+
+  release:
+    needs: [build-windows, build-macos, build-linux]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            OpenClaw_Installer_Windows/OpenClaw_Installer.exe
+            OpenClaw_Installer_macOS/OpenClaw_Installer_macOS.zip
+            OpenClaw_Installer_Linux/OpenClaw_Installer
+          generate_release_notes: true
