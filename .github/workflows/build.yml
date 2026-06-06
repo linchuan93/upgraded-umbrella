@@ -30,10 +30,11 @@ jobs:
           python-version: "3.11"
       - run: pip install pyinstaller
       - run: pyinstaller openclaw_installer.spec --clean --noconfirm
+      - run: cd dist && zip -ry OpenClaw_Installer_macOS.zip OpenClaw_Installer.app
       - uses: actions/upload-artifact@v4
         with:
           name: OpenClaw_Installer_macOS
-          path: dist/OpenClaw_Installer.app
+          path: dist/OpenClaw_Installer_macOS.zip
 
   build-linux:
     runs-on: ubuntu-latest
@@ -62,10 +63,8 @@ jobs:
       - uses: actions/download-artifact@v4
       - run: |
           cp OpenClaw_Installer_Windows/OpenClaw_Installer.exe ./
+          cp OpenClaw_Installer_macOS/OpenClaw_Installer_macOS.zip ./
           cp OpenClaw_Installer_Linux/OpenClaw_Installer ./
-          cd OpenClaw_Installer_macOS
-          zip -r ../OpenClaw_Installer_macOS.zip OpenClaw_Installer.app
-          cd ..
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
