@@ -57,6 +57,8 @@ jobs:
     needs: [build-windows, build-macos, build-linux]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v4
       - name: Create Release
@@ -66,4 +68,3 @@ jobs:
             OpenClaw_Installer_Windows/OpenClaw_Installer.exe
             OpenClaw_Installer_macOS/OpenClaw_Installer_macOS.zip
             OpenClaw_Installer_Linux/OpenClaw_Installer
-          generate_release_notes: true
