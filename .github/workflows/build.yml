@@ -30,7 +30,9 @@ jobs:
           python-version: "3.11"
       - run: pip install pyinstaller
       - run: pyinstaller openclaw_installer.spec --clean --noconfirm
-      - run: cd dist && zip -r OpenClaw_Installer_macOS.zip OpenClaw_Installer.app
+      - run: |
+          cd dist
+          ditto -c -k --keepParent OpenClaw_Installer.app OpenClaw_Installer_macOS.zip
       - uses: actions/upload-artifact@v4
         with:
           name: OpenClaw_Installer_macOS
