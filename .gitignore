@@ -1,0 +1,23 @@
+# PyInstaller build artifacts
+build/
+dist/
+*.pyc
+__pycache__/
+*.spec.bak
+
+# Python
+*.egg-info/
+.eggs/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

@@ -1,0 +1,8 @@
+# OpenClaw 一键安装程序 - Python 依赖
+# 这些依赖仅在开发和构建时需要，最终产物不依赖它们
+
+# PyInstaller - 打包为独立可执行文件
+pyinstaller>=6.0
+
+# pytest - 测试框架（可选）
+pytest>=7.0

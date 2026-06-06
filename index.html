@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw 一键安装程序</title>
+    <link rel="preconnect" href="https://fonts.googleapis.cn">
+    <link rel="preconnect" href="https://fonts.gstatic.cn" crossorigin>
+    <link href="https://fonts.googleapis.cn/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        :root {
+            --bg: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-card-hover: #1a1a28;
+            --border: #1e1e2e;
+            --text: #e4e4e7;
+            --text-muted: #71717a;
+            --accent: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --success: #22c55e;
+            --error: #ef4444;
+            --warning: #f59e0b;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* ── Hero ── */
+        .hero {
+            text-align: center;
+            padding: 80px 24px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -200px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        .hero h1 span {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            font-size: 1.125rem;
+            color: var(--text-muted);
+            max-width: 520px;
+            margin: 0 auto 32px;
+        }
+        .hero .badges {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+        }
+        .badge .dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+        
+        /* ── Container ── */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        
+        /* ── Section ── */
+        .section {
+            margin-bottom: 64px;
+        }
+        .section h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .section .subtitle {
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+        
+        /* ── Installer Demo ── */
+        .installer-mock {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            max-width: 560px;
+            margin: 0 auto 48px;
+        }
+        .installer-titlebar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255,255,255,0.02);
+        }
+        .titlebar-dot {
+            width: 12px; height: 12px;
+            border-radius: 50%;
+        }
+        .titlebar-dot.red { background: #ff5f57; }
+        .titlebar-dot.yellow { background: #febc2e; }
+        .titlebar-dot.green { background: #28c840; }
+        .titlebar-text {
+            flex: 1;
+            text-align: center;
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+        }
+        .installer-body {
+            padding: 32px 24px;
+        }
+        .installer-body h3 {
+            font-size: 1.25rem;
+            margin-bottom: 4px;
+        }
+        .installer-body .desc {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+        .step-list {
+            list-style: none;
+            margin-bottom: 24px;
+        }
+        .step-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 0.875rem;
+        }
+        .step-icon {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+        .step-icon.done { background: rgba(34,197,94,0.15); color: var(--success); }
+        .step-icon.active { background: rgba(59,130,246,0.15); color: var(--accent); }
+        .step-icon.pending { background: rgba(113,113,122,0.1); color: var(--text-muted); }
+        
+        .progress-track {
+            height: 6px;
+            background: rgba(113,113,122,0.15);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: width 0.8s ease;
+        }
+        .progress-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-align: right;
+        }
+        
+        .log-area {
+            background: #080810;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.7;
+            color: #a1a1aa;
+            max-height: 160px;
+            overflow-y: auto;
+            margin-top: 16px;
+        }
+        .log-area .log-success { color: var(--success); }
+        .log-area .log-info { color: var(--accent); }
+        .log-area .log-warn { color: var(--warning); }
+        
+        .install-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 32px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #3b82f6, #6366f1);
+            color: white;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            margin-top: 20px;
+        }
+        .install-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 20px rgba(59,130,246,0.3);
+        }
+        .install-btn:active { transform: translateY(0); }
+        .install-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* ── Features Grid ── */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 24px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .feature-card:hover {
+            border-color: rgba(59,130,246,0.3);
+            background: var(--bg-card-hover);
+        }
+        .feature-icon {
+            width: 40px; height: 40px;
+            border-radius: 10px;
+            background: var(--accent-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            margin-bottom: 14px;
+        }
+        .feature-card h3 {
+            font-size: 1rem;
+            margin-bottom: 6px;
+        }
+        .feature-card p {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+        
+        /* ── Download Cards ── */
+        .downloads {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+        .download-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 24px;
+            text-align: center;
+            transition: border-color 0.2s, transform 0.15s;
+        }
+        .download-card:hover {
+            border-color: rgba(59,130,246,0.3);
+            transform: translateY(-2px);
+        }
+        .download-card .platform-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+        .download-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 4px;
+        }
+        .download-card .arch {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .download-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 20px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text);
+            font-size: 0.8125rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .download-btn:hover {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+        
+        /* ── Architecture ── */
+        .arch-diagram {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 32px;
+            overflow-x: auto;
+        }
+        .arch-diagram pre {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8125rem;
+            line-height: 1.8;
+            color: #a1a1aa;
+        }
+        .arch-diagram .hl { color: var(--accent); }
+        .arch-diagram .hl2 { color: #8b5cf6; }
+        .arch-diagram .hl3 { color: var(--success); }
+        .arch-diagram .comment { color: #52525b; }
+        
+        /* ── Security ── */
+        .security-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        .security-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+        .security-item .icon {
+            flex-shrink: 0;
+            font-size: 1.25rem;
+        }
+        .security-item .text {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+        .security-item .text strong {
+            color: var(--text);
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        /* ── Footer ── */
+        footer {
+            text-align: center;
+            padding: 48px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.8125rem;
+        }
+        
+        /* ── Responsive ── */
+        @media (max-width: 640px) {
+            .hero h1 { font-size: 2rem; }
+            .hero p { font-size: 1rem; }
+            .installer-mock { margin: 0 0 32px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero -->
+    <section class="hero">
+        <h1><span>OpenClaw</span> 一键安装程序</h1>
+        <p>零交互 · 零环境依赖 · 全系统兼容 — 双击即可完成全部安装</p>
+        <div class="badges">
+            <span class="badge"><span class="dot"></span>Windows 10/11</span>
+            <span class="badge"><span class="dot"></span>macOS 12+</span>
+            <span class="badge"><span class="dot"></span>Linux</span>
+        </div>
+    </section>
+
+    <!-- Installer Demo -->
+    <div class="container">
+        <div class="installer-mock" id="installerDemo">
+            <div class="installer-titlebar">
+                <span class="titlebar-dot red"></span>
+                <span class="titlebar-dot yellow"></span>
+                <span class="titlebar-dot green"></span>
+                <span class="titlebar-text">OpenClaw Installer v1.0.0</span>
+            </div>
+            <div class="installer-body">
+                <h3>OpenClaw 一键安装程序</h3>
+                <p class="desc">零交互 · 零环境依赖 · 全系统兼容</p>
+                
+                <ul class="step-list" id="stepList">
+                    <li><span class="step-icon pending" id="step0">○</span>检测系统环境</li>
+                    <li><span class="step-icon pending" id="step1">○</span>检测网络环境</li>
+                    <li><span class="step-icon pending" id="step2">○</span>检查权限</li>
+                    <li><span class="step-icon pending" id="step3">○</span>安装依赖</li>
+                    <li><span class="step-icon pending" id="step4">○</span>安装 OpenClaw</li>
+                    <li><span class="step-icon pending" id="step5">○</span>运行初始化向导</li>
+                    <li><span class="step-icon pending" id="step6">○</span>安装守护进程</li>
+                    <li><span class="step-icon pending" id="step7">○</span>安全配置</li>
+                    <li><span class="step-icon pending" id="step8">○</span>运行诊断</li>
+                </ul>
+                
+                <div class="progress-track">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="progressText">0%</div>
+                
+                <div class="log-area" id="logArea">
+                    <div>─ 安全提示 ─</div>
+                    <div>• 本程序不会收集任何个人信息</div>
+                    <div>• 默认监听 127.0.0.1，不暴露公网</div>
+                    <div>─ ─ ─ ─ ─ ─ ─</div>
+                </div>
+                
+                <button class="install-btn" id="startBtn" onclick="startDemo()">
+                    ▶ 开始安装
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features -->
+    <div class="container">
+        <section class="section">
+            <h2>核心特性</h2>
+            <p class="subtitle">专为简化 OpenClaw 安装流程而设计</p>
+            <div class="features">
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>零环境依赖</h3>
+                    <p>无需预装 Python、Node.js 等任何运行环境，程序自带全部运行时，全新系统即可运行。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>智能自动应答</h3>
+                    <p>三级降级策略自动处理 openclaw onboard 所有交互提示，无需用户手动输入。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🌍</div>
+                    <h3>国内镜像加速</h3>
+                    <p>自动检测网络环境，国内用户自动切换 npmmirror、清华 pip 镜像等国内源。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔧</div>
+                    <h3>智能诊断修复</h3>
+                    <p>集成 openclaw doctor 诊断，安装失败时自动检测并修复常见问题。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>安全优先</h3>
+                    <p>默认 127.0.0.1 监听不暴露公网，关闭遥测，配置修改前自动备份。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>自动重试机制</h3>
+                    <p>指数退避重试策略（最多 3 次），网络波动时自动恢复，无需重新启动。</p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Architecture -->
+    <div class="container">
+        <section class="section">
+            <h2>项目架构</h2>
+            <p class="subtitle">模块化设计，核心逻辑与 GUI 完全分离</p>
+            <div class="arch-diagram">
+<pre><span class="comment"># 入口层</span>
+<span class="hl">main.py</span> ─── GUI 模式 (tkinter) + CLI 降级
+
+<span class="comment"># 核心层</span>
+<span class="hl2">platform_detector</span>   ─ 操作系统 / CPU / 磁盘 / 杀毒检测
+<span class="hl2">dependency_manager</span>  ─ Node.js / Python / Git 静默安装
+<span class="hl2">network_manager</span>     ─ 网络检测 + 国内镜像自动切换
+<span class="hl2">openclaw_installer</span>  ─ 官方脚本 / npm / brew 三级安装
+<span class="hl2">onboard_handler</span>     ─ non-interactive → PTY → 手动 三级应答
+<span class="hl2">daemon_manager</span>      ─ systemd / launchd / 任务计划 开机自启
+<span class="hl2">doctor_runner</span>       ─ 诊断 + 自动修复 + 错误码匹配
+<span class="hl2">error_handler</span>       ─ 指数退避重试 + 结构化错误报告
+<span class="hl2">config_manager</span>      ─ JSON 配置 + 自动备份 + 回滚
+
+<span class="comment"># 工具层</span>
+<span class="hl3">logger</span>     ─ 统一日志 (控制台 + 文件轮转)
+<span class="hl3">privilege</span>  ─ UAC / sudo / pkexec 提权
+<span class="hl3">security</span>   ─ SHA-256 校验 + 安全配置验证</pre>
+            </div>
+        </section>
+    </div>
+
+    <!-- Downloads -->
+    <div class="container">
+        <section class="section">
+            <h2>下载安装</h2>
+            <p class="subtitle">选择适合您操作系统的安装程序</p>
+            <div class="downloads">
+                <div class="download-card">
+                    <div class="platform-icon">🪟</div>
+                    <h3>Windows</h3>
+                    <p class="arch">x64 | .exe | ~30MB</p>
+                    <button class="download-btn">↓ 下载 exe</button>
+                </div>
+                <div class="download-card">
+                    <div class="platform-icon">🍎</div>
+                    <h3>macOS</h3>
+                    <p class="arch">Intel + Apple Silicon | .app</p>
+                    <button class="download-btn">↓ 下载 app</button>
+                </div>
+                <div class="download-card">
+                    <div class="platform-icon">🐧</div>
+                    <h3>Linux</h3>
+                    <p class="arch">x64 / ARM64 | AppImage</p>
+                    <button class="download-btn">↓ 下载 AppImage</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Security -->
+    <div class="container">
+        <section class="section">
+            <h2>安全与信任</h2>
+            <p class="subtitle">您的安全和隐私是我们的首要考量</p>
+            <div class="security-grid">
+                <div class="security-item">
+                    <span class="icon">🔒</span>
+                    <span class="text"><strong>本地执行</strong>所有安装过程均在本地执行，不收集任何个人信息</span>
+                </div>
+                <div class="security-item">
+                    <span class="icon">🏠</span>
+                    <span class="text"><strong>默认安全</strong>监听 127.0.0.1，不自动暴露到公网</span>
+                </div>
+                <div class="security-item">
+                    <span class="icon">🔑</span>
+                    <span class="text"><strong>文件校验</strong>提供 SHA-256 哈希值，可自行验证文件完整性</span>
+                </div>
+                <div class="security-item">
+                    <span class="icon">📝</span>
+                    <span class="text"><strong>代码签名</strong>支持 Windows/macOS 代码签名，避免安全警告</span>
+                </div>
+                <div class="security-item">
+                    <span class="icon">💾</span>
+                    <span class="text"><strong>配置备份</strong>修改配置前自动备份，支持一键回滚</span>
+                </div>
+                <div class="security-item">
+                    <span class="icon">📊</span>
+                    <span class="text"><strong>关闭遥测</strong>默认关闭遥测功能，不发送任何使用数据</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>OpenClaw Installer v1.0.0 &mdash; MIT License</p>
+        <p style="margin-top:8px;">本程序不会收集任何个人信息，所有安装过程均在本地执行</p>
+    </footer>
+
+    <script>
+        // ── 安装演示动画 ──
+        const steps = [
+            { id: 0, name: "检测系统环境", log: "检测到 macOS 14.5 / arm64 / 磁盘 128.5GB", delay: 800, pct: 5 },
+            { id: 1, name: "检测网络环境", log: "网络可用 | 国内网络 → 已切换国内镜像源", delay: 1000, pct: 10 },
+            { id: 2, name: "检查权限", log: "管理员权限: ✓ 已授权", delay: 600, pct: 15 },
+            { id: 3, name: "安装依赖", log: "Node.js v22.14.0 安装完成 | Python 3.12.3 已就绪 | Git 2.47.1 已就绪", delay: 2500, pct: 40 },
+            { id: 4, name: "安装 OpenClaw", log: "OpenClaw 安装成功 (方式: official_script)", delay: 2000, pct: 60 },
+            { id: 5, name: "运行初始化向导", log: "onboard 完成 (模式: non_interactive)", delay: 1500, pct: 75 },
+            { id: 6, name: "安装守护进程", log: "守护进程安装成功，已设置开机自启", delay: 800, pct: 85 },
+            { id: 7, name: "安全配置", log: "安全配置已应用: 127.0.0.1 | 遥测: 关闭", delay: 500, pct: 90 },
+            { id: 8, name: "运行诊断", log: "诊断通过 ✓ 安装健康", delay: 1000, pct: 100 },
+        ];
+
+        let running = false;
+
+        function startDemo() {
+            if (running) return;
+            running = true;
+            
+            const btn = document.getElementById('startBtn');
+            btn.disabled = true;
+            btn.textContent = '安装中...';
+            
+            // Reset
+            for (let i = 0; i <= 8; i++) {
+                const el = document.getElementById('step' + i);
+                el.className = 'step-icon pending';
+                el.textContent = '○';
+            }
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressText').textContent = '0%';
+            
+            let currentStep = 0;
+
+            function nextStep() {
+                if (currentStep >= steps.length) {
+                    btn.textContent = '✓ 安装完成';
+                    addLog('安装完成！所有步骤均已成功执行。', 'log-success');
+                    running = false;
+                    return;
+                }
+
+                const step = steps[currentStep];
+
+                // Mark current step as active
+                const el = document.getElementById('step' + step.id);
+                el.className = 'step-icon active';
+                el.textContent = '◉';
+
+                addLog(`[${currentStep + 1}/9] ${step.name}...`, 'log-info');
+
+                setTimeout(() => {
+                    // Mark as done
+                    el.className = 'step-icon done';
+                    el.textContent = '✓';
+
+                    // Update progress
+                    document.getElementById('progressFill').style.width = step.pct + '%';
+                    document.getElementById('progressText').textContent = step.pct + '%';
+
+                    addLog('  ' + step.log, 'log-success');
+
+                    currentStep++;
+                    setTimeout(nextStep, 300);
+                }, step.delay);
+            }
+
+            nextStep();
+        }
+
+        function addLog(text, cls) {
+            const logArea = document.getElementById('logArea');
+            const div = document.createElement('div');
+            div.className = cls || '';
+            div.textContent = text;
+            logArea.appendChild(div);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+    </script>
+</body>
+</html>

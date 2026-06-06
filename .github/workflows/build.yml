@@ -1,0 +1,52 @@
+name: Build All Platforms
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pyinstaller
+      - run: pyinstaller openclaw_installer.spec --clean --noconfirm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenClaw_Installer_Windows
+          path: dist/OpenClaw_Installer.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pyinstaller
+      - run: pyinstaller openclaw_installer.spec --clean --noconfirm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenClaw_Installer_macOS
+          path: dist/OpenClaw_Installer.app
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-tk
+      - run: pip install pyinstaller
+      - run: pyinstaller openclaw_installer.spec --clean --noconfirm
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenClaw_Installer_Linux
+          path: dist/OpenClaw_Installer
